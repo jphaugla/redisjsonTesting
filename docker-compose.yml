@@ -1,12 +1,30 @@
-version: '3'
+version: '3.9'
 services:
-  redisjson:
-    image: "redislabs/rejson:edge"
-    container_name: redisjson
+  redis:
+    # image: "redislabs/rejson:1.0.8"
+    image: "redis/redis-stack:latest"
+    container_name: redis
     environment:
       - ENABLE_COMMANDS=FLUSHDB,FLUSHALL,CONFIG
     ports:
       - "6379:6379"
+    volumes:
+      - ./redis:/data
+
+  jupyter:
+    image: jupyter/scipy-notebook
+    volumes:
+      - ./src
+    ports:
+      - 8888:8888
+      - 5000:5000
+    container_name: jupyter
+    environment:
+      - REDIS_SERVER=redis
+      - REDIS_PORT=6379
+      - REDIS_OM_URL=redis://redis:6379
+    depends_on:
+      - redis
 
   insight:
     image: "redislabs/redisinsight:latest"
@@ -14,7 +32,7 @@ services:
     ports:
       - "8001:8001"
     volumes:
-      - ../redisinsight:/db
+      - ./redisinsight:/db
     depends_on:
-      - redisjson
+      - redis
 
